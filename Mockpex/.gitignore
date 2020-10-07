@@ -1,0 +1,5 @@
+# Visual studio code settings
+*.code-workspace
+
+# Salesforce system files.
+.sfdx/
