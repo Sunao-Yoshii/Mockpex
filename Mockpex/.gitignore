@@ -3,3 +3,5 @@
 
 # Salesforce system files.
 .sfdx/
+
+*.log
