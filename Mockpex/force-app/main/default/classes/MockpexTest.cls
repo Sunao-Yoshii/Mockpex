@@ -71,4 +71,47 @@ public with sharing class MockpexTest {
         }
         System.assert(false, 'Cant call');
     }
+
+    /**
+     * Checking call log.
+     */
+    @isTest
+    public static void Verify_simplly_call_Test() {
+        Mockpex setting = new Mockpex();
+
+        setting.when('fizzBuzz').thenReturn('FizzBuzz');
+
+        Fizzbuzz mock = (Fizzbuzz) Mockpex.createStub(Fizzbuzz.class, setting);
+        
+        for (Integer n = 0; n < 20; n++) {
+            mock.fizzBuzz(n);
+        }
+
+        // get all log by name.
+        List<Mockpex.CallLog> logs = setting.findLog('fizzBuzz');
+        System.assertEquals(20, logs.size(), '20 calls.');
+
+        // return all logs.
+        for (Integer n = 0; n < 20; n++) {
+            Mockpex.CallLog log = logs[n];
+            System.assertEquals('fizzBuzz', log.methodName);
+            System.assertEquals(Integer.class, log.argTypes[0]);
+            System.assertEquals(n, log.argVals[0]);
+        }
+
+        // verify
+        setting.verify('fizzBuzz', 20);
+
+        // get target value log.
+        logs = setting.findLog('fizzBuzz', new List<Mockpex.ArgMatcher> { Mockpex.eqArg(11) });
+        System.assertEquals(1, logs.size(), '1 calls.');
+
+        // match method found.
+        System.assertEquals('fizzBuzz', logs[0].methodName);
+        System.assertEquals(Integer.class, logs[0].argTypes[0]);
+        System.assertEquals(11, logs[0].argVals[0]);
+
+        // veryfy
+        setting.verify('fizzBuzz', new List<Mockpex.ArgMatcher> { Mockpex.eqArg(11) }, 1);
+    }
 }

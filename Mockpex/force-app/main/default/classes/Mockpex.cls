@@ -40,7 +40,7 @@ public with sharing class Mockpex implements System.StubProvider {
     /**
      * Method call log object.
      */
-    class CallLog {
+    public class CallLog {
         public String methodName { get; set; }
         public List<Type> argTypes { get; set; }
         public List<Object> argVals { get; set; }
@@ -57,14 +57,24 @@ public with sharing class Mockpex implements System.StubProvider {
      * @param  times      times description
      * @return            return description
      */
-    public Boolean verify(String methodName, Integer times) {
-        Integer callCount = 0;
+    public void verify(String methodName, Integer times) {
+        Integer num = this.findLog(methodName).size();
+        System.assertEquals(times, num, 'Method ' + methodName + ' are exprct calls ' + times + ' but was ' + num);
+    }
+
+    /**
+     * search log by method name
+     * @param  methodName methodName description
+     * @return            return description
+     */
+    public List<CallLog> findLog(String methodName) {
+        List<CallLog> result = new List<CallLog>();
         for (CallLog log : this.callLogs) {
-            if (log.methodName == methodName && (log.argTypes == null || log.argTypes.isEmpty())) {
-                callCount++;
+            if (log.methodName == methodName) {
+                result.add(log);
             }
         }
-        return callCount == times;
+        return result;
     }
 
     /**
@@ -74,8 +84,18 @@ public with sharing class Mockpex implements System.StubProvider {
      * @param  times      times description
      * @return            return description
      */
-    public Boolean verify(String methodName, List<ArgMatcher> matchers, Integer times) {
-        Integer callCount = 0;
+    public void verify(String methodName, List<ArgMatcher> matchers, Integer times) {
+        Integer num = this.findLog(methodName, matchers).size();
+        System.assertEquals(times, num, 'Method ' + methodName + ' are exprct calls ' + times + ' but was ' + num);
+    }
+
+    /**
+     * search log by method name
+     * @param  methodName methodName description
+     * @return            return description
+     */
+    public List<CallLog> findLog(String methodName, List<ArgMatcher> matchers) {
+        List<CallLog> result = new List<CallLog>();
         for (CallLog log : this.callLogs) {
             if (log.argVals == null || matchers.size() != log.argVals.size()) {
                 continue;
@@ -90,18 +110,17 @@ public with sharing class Mockpex implements System.StubProvider {
                     argMatchCount++;
                 }
             }
-            // match all args
             if (argMatchCount == matchers.size()) {
-                callCount++;
+                result.add(log);
             }
         }
-        return callCount == times;
+        return result;
     }
 
     /**
      * Mock method definition.
      */
-    virtual class MethodStub {
+    public virtual class MethodStub {
         public String name { get; set; }
         public Object returnValue { get; set; }
         public MethodStub(String name, Object returnValue) {
@@ -120,7 +139,7 @@ public with sharing class Mockpex implements System.StubProvider {
         }
     }
 
-    virtual class ArgMethodStub extends MethodStub {
+    private virtual class ArgMethodStub extends MethodStub {
         public List<ArgMatcher> argMatchers;
         public ArgMethodStub(String name, List<ArgMatcher> argMatchers, Object returnValue) {
             super(name, returnValue);
@@ -145,7 +164,7 @@ public with sharing class Mockpex implements System.StubProvider {
     /**
      * throws exception method stub.
      */
-    class ExceptMethodStub extends MethodStub {
+    private class ExceptMethodStub extends MethodStub {
         public Exception throwValue;
         public ExceptMethodStub(String name, Exception throwValue) {
             super(name, null);
@@ -156,7 +175,7 @@ public with sharing class Mockpex implements System.StubProvider {
         }
     }
 
-    class ExceptArgMethodStub extends ArgMethodStub {
+    private class ExceptArgMethodStub extends ArgMethodStub {
         public List<ArgMatcher> argMatchers;
         public Exception throwValue;
         public ExceptArgMethodStub(String name, List<ArgMatcher> argMatchers, Exception returnValue) {
@@ -209,13 +228,13 @@ public with sharing class Mockpex implements System.StubProvider {
         Boolean match(Type argType, Object argValue);
     }
 
-    class AnyArgMatcher implements ArgMatcher {
+    private class AnyArgMatcher implements ArgMatcher {
         public Boolean match(Type argType, Object argValue) {
             return true;
         }
     }
 
-    class EqualArgMatcher implements ArgMatcher {
+    private class EqualArgMatcher implements ArgMatcher {
         private Object value;
         public EqualArgMatcher(Object value) {
             this.value = value;
